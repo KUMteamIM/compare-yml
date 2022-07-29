@@ -21,7 +21,7 @@ module Compare
       @target_file_path = target_file_path
     end
 
-    def process
+    def missing_keys
       unless (validate_source && validate_target)
         puts 'Exiting...'
         return
@@ -29,6 +29,7 @@ module Compare
       
       @source = File.open(source_file_path) if validate_source
       @target = File.open(target_file_path) if validate_target
+
       compare
     end
 
@@ -54,8 +55,7 @@ module Compare
         source_keys = flatten_keys(get_normalized_data(source_yml))
         target_keys = flatten_keys(get_normalized_data(target_yml))
 
-        compare_keys(source_keys, target_keys, source_file_path)
-        compare_keys(target_keys, source_keys, target_file_path)
+        source_keys - target_keys
       end
 
       def get_normalized_data data
@@ -65,11 +65,6 @@ module Compare
         else
           data
         end
-      end
-
-      def compare_keys source_keys, target_keys, source_file_path
-        missing = target_keys - source_keys
-        print_missing_keys(missing, source_file_path)
       end
 
       def load_file file, file_path
@@ -85,16 +80,6 @@ module Compare
           ::YAML.load(file_contents_as_string)
         else
           puts "File extension '#{ext}'' is not supported."
-        end
-      end
-
-      def print_missing_keys missing_keys, file
-        if missing_keys.any?
-          puts "Missing from #{file}:"
-          missing_keys.each { |key| puts "  - #{key}" }
-          puts ""
-        else
-          puts "Nothing missing from #{file}."
         end
       end
 
